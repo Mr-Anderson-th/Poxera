@@ -1,7 +1,7 @@
 // Poxera Game Setup — ตั้งค่าก่อนเริ่มเกม (parity กับเว็บหลัก):
 // เงินพิมพ์เองได้ · blind modes พร้อมคำอธิบายชัด · เวลา 5/10/15... (+/−5 ไม่มีบั๊ก) · payout presets พร้อมคำแนะนำจำนวนคน + custom %
-import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Animated, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { ChevronLeft, Check } from "lucide-react-native";
@@ -43,6 +43,8 @@ export default function GameSetupScreen() {
   const [rebuy, setRebuy] = useState(String(setup.rebuyAmount));
   const [sb, setSb] = useState(String(setup.startSb));
   const [bb, setBb] = useState(String(setup.startBb));
+  const [errors, setErrors] = useState<string[]>([]); // fields ที่ผิด → ขอบแดง
+  const [shake, setShake] = useState(0); // เปลี่ยนค่า = trigger สั่น
 
   const mins = setup.levelMinutes; // ควบคุมผ่าน store — step 5 เสมอ
   const num = (s: string, fb: number) => (Number(s) > 0 ? Number(s) : fb);
@@ -63,10 +65,42 @@ export default function GameSetupScreen() {
     }
   };
 
+  const bad = (field: string) => errors.includes(field);
+
+  // shake animation — ทำงานทุกครั้งที่ save ไม่ผ่าน
+  const shakeX = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (shake === 0) return;
+    Animated.sequence([
+      Animated.timing(shakeX, { toValue: 10, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeX, { toValue: -10, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeX, { toValue: 7, duration: 55, useNativeDriver: true }),
+      Animated.timing(shakeX, { toValue: -7, duration: 55, useNativeDriver: true }),
+      Animated.timing(shakeX, { toValue: 0, duration: 50, useNativeDriver: true }),
+    ]).start();
+  }, [shake, shakeX]);
+
+  const errStyle = (field: string) =>
+    bad(field) ? { borderColor: C.rd, borderWidth: 1.5, backgroundColor: C.rdSoft } : null;
+
   const save = () => {
+    // validate — ช่องไหนว่าง/ไม่ใช่ตัวเลข → แดง + สั่น
+    const badFields: string[] = [];
+    if (!(Number(buyIn) > 0)) badFields.push("buyIn");
+    if (!(Number(rebuy) > 0)) badFields.push("rebuy");
+    if (setup.blindMode === "custom") {
+      if (!(Number(sb) > 0)) badFields.push("sb");
+      if (!(Number(bb) > 0)) badFields.push("bb");
+    }
+    if (badFields.length > 0) {
+      setErrors(badFields);
+      setShake((n) => n + 1); // trigger สั่น
+      return;
+    }
+    setErrors([]);
     setup.setSetup({
-      buyIn: num(buyIn, 500),
-      rebuyAmount: num(rebuy, 500),
+      buyIn: num(buyIn, 100),
+      rebuyAmount: num(rebuy, 100),
       startSb: num(sb, 25),
       startBb: num(bb, 50),
     });
@@ -89,6 +123,7 @@ export default function GameSetupScreen() {
         <Text style={styles.title}>SET — ตั้งค่าการเล่น</Text>
       </View>
 
+      <Animated.View style={{ flex: 1, transform: [{ translateX: shakeX }] }}>
       <ScrollView contentContainerStyle={{ padding: S.lg, paddingBottom: S.xl * 3 }}>
         {/* เงิน — พิมพ์เองได้ */}
         <View style={styles.card}>
@@ -96,21 +131,24 @@ export default function GameSetupScreen() {
 
           <Text style={styles.label}>บายอิน (฿)</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, errStyle("buyIn")]}
             value={buyIn}
-            onChangeText={setBuyIn}
+            onChangeText={(t) => { setBuyIn(t); if (bad("buyIn")) setErrors(errors.filter((e) => e !== "buyIn")); }}
             keyboardType="number-pad"
             accessibilityLabel="บายอิน"
           />
 
           <Text style={styles.label}>ราคา re-buy (฿)</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, errStyle("rebuy")]}
             value={rebuy}
-            onChangeText={setRebuy}
+            onChangeText={(t) => { setRebuy(t); if (bad("rebuy")) setErrors(errors.filter((e) => e !== "rebuy")); }}
             keyboardType="number-pad"
             accessibilityLabel="ราคา re-buy"
           />
+          {bad("buyIn") || bad("rebuy") ? (
+            <Text style={styles.errText}>กรอกจำนวนเงินให้ครบ (มากกว่า 0)</Text>
+          ) : null}
         </View>
 
         {/* blind structure */}
@@ -142,29 +180,31 @@ export default function GameSetupScreen() {
           </View>
           <Text style={styles.modeDesc}>{modeDesc}</Text>
 
-          {setup.blindMode === "custom" ? (
-            <View style={styles.row2}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.label}>Starting SB</Text>
-                <TextInput
-                  style={styles.input}
-                  value={sb}
-                  onChangeText={setSb}
-                  keyboardType="number-pad"
-                  accessibilityLabel="Starting small blind"
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.label}>Starting BB</Text>
-                <TextInput
-                  style={styles.input}
-                  value={bb}
-                  onChangeText={setBb}
-                  keyboardType="number-pad"
-                  accessibilityLabel="Starting big blind"
-                />
-              </View>
+          {/* Starting SB/BB — แสดงเสมอ (ใช้กับทุกโหมด) */}
+          <View style={styles.row2}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.label}>Starting SB</Text>
+              <TextInput
+                style={[styles.input, errStyle("sb")]}
+                value={sb}
+                onChangeText={(t) => { setSb(t); if (bad("sb")) setErrors(errors.filter((e) => e !== "sb")); }}
+                keyboardType="number-pad"
+                accessibilityLabel="Starting small blind"
+              />
             </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.label}>Starting BB</Text>
+              <TextInput
+                style={[styles.input, errStyle("bb")]}
+                value={bb}
+                onChangeText={(t) => { setBb(t); if (bad("bb")) setErrors(errors.filter((e) => e !== "bb")); }}
+                keyboardType="number-pad"
+                accessibilityLabel="Starting big blind"
+              />
+            </View>
+          </View>
+          {bad("sb") || bad("bb") ? (
+            <Text style={styles.errText}>กรอก Starting SB / BB ให้ครบ (มากกว่า 0)</Text>
           ) : null}
         </View>
 
@@ -198,7 +238,7 @@ export default function GameSetupScreen() {
               <Text style={styles.timeBtnText}>+5</Text>
             </Pressable>
           </View>
-          <Text style={styles.hint}>5 · 10 · 15 · 20 … นาที (เริ่มต้น 5 — จบไวเหมาะโต๊ะเพื่อน)</Text>
+          <Text style={styles.hint}>ปรับทีละ 5 นาที (ค่าเริ่มต้น 15)</Text>
         </View>
 
         {/* payout */}
@@ -255,6 +295,7 @@ export default function GameSetupScreen() {
           <Text style={styles.saveText}>บันทึกการตั้งค่า</Text>
         </Pressable>
       </ScrollView>
+      </Animated.View>
     </SafeAreaView>
   );
 }
@@ -341,6 +382,7 @@ const styles = StyleSheet.create({
   timeVal: { ...f("extrabold"), fontSize: 30, color: C.org, fontVariant: ["tabular-nums"] },
   timeUnit: { ...f("medium"), fontSize: 11, color: C.tx3, marginTop: 2 },
   hint: { ...f("regular"), fontSize: 11.5, color: C.tx3, marginTop: 8, lineHeight: 17 },
+  errText: { ...f("semibold"), fontSize: 12, color: C.rd, marginTop: S.sm },
   payoutIntro: { ...f("regular"), fontSize: 12, color: C.tx2, marginBottom: S.sm },
   payoutRow: {
     flexDirection: "row",
