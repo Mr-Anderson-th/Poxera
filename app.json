@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "Poxera",
+    "slug": "poxera",
+    "version": "1.0.0",
+    "scheme": "poxera",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#F7F6F3",
+    "splash": {
+      "backgroundColor": "#F7F6F3",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.poxera.app"
+    },
+    "android": {
+      "package": "com.poxera.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#FC5200"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-splash-screen"
+    ],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}
