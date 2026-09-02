@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Poxera — Sports/Social Design Proposal</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* ฐานเดิม (v3 White Premium) */
+    --paper: #FFFFFF;
+    --linen: #F7F6F3;
+    --line: #E8E7E2;
+    --ink: #111112;
+    --tx2: #5F5F66;
+    --tx3: #9A9AA2;
+    --org: #FC5200;
+    /* ยกระดับตาม Sports/Social proposal */
+    --champ: #B8912F;        /* championship gold */
+    --champ-soft: #FBF3E0;
+    --red: #D92D20;          /* team red — ใช้เฉพาะจุดพลิกวินาที */
+    --score-in: 0.35s cubic-bezier(0.34, 1.4, 0.64, 1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Sans Thai", sans-serif;
+    background: #E9E7E2;
+    padding: 40px 24px 80px;
+    color: var(--ink);
+  }
+  .page-title { text-align: center; font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+  .page-sub { text-align: center; font-size: 13px; color: var(--tx2); margin-bottom: 40px; }
+  .phones { display: flex; gap: 36px; justify-content: center; flex-wrap: wrap; }
+  .phone-col { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .phone-label { font-size: 13px; font-weight: 700; color: var(--tx2); letter-spacing: 0.5px; }
+  .phone {
+    width: 340px; height: 700px;
+    background: var(--linen);
+    border-radius: 40px;
+    border: 10px solid #17171A;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .statusbar {
+    height: 34px; background: var(--paper);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 22px; font-size: 10px; font-weight: 700; color: var(--tx2);
+    border-bottom: 1px solid var(--line);
+  }
+  .content { flex: 1; overflow: hidden; padding: 14px 14px 0; }
+  .tabbar {
+    height: 74px; background: var(--paper); border-top: 1px solid var(--line);
+    display: flex; justify-content: space-around; align-items: flex-start; padding-top: 10px;
+  }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 8.5px; font-weight: 800; letter-spacing: 0.8px; color: #B3B3BA; text-transform: uppercase; }
+  .tab.active { color: var(--org); }
+  .tab svg { width: 20px; height: 20px; }
+
+  /* ============ FEED ============ */
+  .brandrow { display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px; }
+  .brand { font-family: "Bebas Neue", sans-serif; font-size: 22px; letter-spacing: 2px; }
+  .brandsub { font-size: 12px; color: var(--tx3); font-weight: 600; }
+  .post {
+    background: var(--paper); border: 1px solid var(--line); border-radius: 18px;
+    padding: 16px; margin-bottom: 12px;
+    animation: cardIn 0.45s cubic-bezier(0.34, 1.4, 0.64, 0.9) both;
+  }
+  .post:nth-child(2) { animation-delay: 0.07s; }
+  .post:nth-child(3) { animation-delay: 0.14s; }
+  @keyframes cardIn { from { opacity: 0; transform: translateY(14px) scale(0.97); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .post { animation: none; } }
+  .phead { display: flex; align-items: center; gap: 10px; }
+  .avatar { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 17px; }
+  .pname { font-weight: 800; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+  .badge-champ { background: var(--ink); color: #fff; font-size: 8px; font-weight: 800; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.5px; }
+  .pmeta { font-size: 11px; color: var(--tx3); margin-top: 1px; }
+  .ptitle { font-weight: 800; font-size: 16.5px; line-height: 1.45; margin: 12px 0 4px; }
+  .pcap { font-size: 12.5px; color: var(--tx2); }
+  .pstats {
+    display: flex; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line);
+  }
+  .pstat { flex: 1; }
+  .pstat .l { font-size: 9.5px; color: var(--tx3); }
+  .pstat .v { font-weight: 800; font-size: 14.5px; font-variant-numeric: tabular-nums; margin-top: 2px; display: flex; align-items: center; gap: 4px; }
+  .pstat .v.gold { color: var(--champ); }
+  .ach {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--champ-soft); border-radius: 12px; padding: 10px 12px; margin-top: 12px;
+    animation: popIn 0.5s 0.3s cubic-bezier(0.34, 1.5, 0.64, 1) backwards;
+  }
+  @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: none; opacity: 1; } }
+  .ach svg { width: 18px; height: 18px; }
+  .ach span { font-size: 12px; font-weight: 600; color: #8A6A1C; }
+  .photos { display: flex; gap: 8px; margin: 12px -16px 0; padding: 0 16px; overflow-x: auto; scroll-snap-type: x mandatory; }
+  .photo {
+    min-width: calc(100% - 32px); height: 150px; border-radius: 14px;
+    display: flex; align-items: flex-end; padding: 10px 12px;
+    color: rgba(255,255,255,0.85); font-size: 10px; font-weight: 600;
+    scroll-snap-align: center; position: relative; overflow: hidden;
+  }
+  .photo::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 45%);
+  }
+  .pcounts { display: flex; justify-content: space-between; font-size: 11px; color: var(--tx3); margin-top: 10px; }
+  .pactions { display: flex; justify-content: space-around; border-top: 1px solid var(--line); margin-top: 8px; padding-top: 8px; }
+  .pact { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--tx2); padding: 8px 14px; border-radius: 10px; cursor: pointer; }
+  .pact.kudos { color: var(--org); background: #FFF1EA; }
+  .pact svg { width: 16px; height: 16px; }
+
+  /* ============ SEASON (ใหม่) ============ */
+  .seasonHero {
+    background: linear-gradient(135deg, #17171A 0%, #2A2419 100%);
+    border-radius: 18px; padding: 18px; color: #fff; margin-bottom: 12px;
+    position: relative; overflow: hidden;
+  }
+  .seasonHero::before {
+    content: ""; position: absolute; right: -30px; top: -30px;
+    width: 130px; height: 130px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(184,145,47,0.35), transparent 70%);
+  }
+  .seasonTag { font-size: 9.5px; font-weight: 700; letter-spacing: 1.5px; color: var(--champ); }
+  .seasonName { font-family: "Bebas Neue", sans-serif; font-size: 30px; letter-spacing: 1px; margin: 2px 0 10px; }
+  .seasonMeta { display: flex; gap: 18px; font-size: 11px; color: rgba(255,255,255,0.7); }
+  .seasonMeta b { color: #fff; font-size: 13px; display: block; font-variant-numeric: tabular-nums; }
+  .lb-card {
+    background: var(--paper); border: 1px solid var(--line); border-radius: 14px;
+    display: flex; align-items: center; gap: 11px; padding: 11px 13px; margin-bottom: 8px;
+  }
+  .lb-card.top1 { border-color: var(--champ); background: linear-gradient(90deg, var(--champ-soft), #fff 55%); }
+  .lb-rank { width: 26px; text-align: center; font-weight: 800; font-size: 14px; color: var(--tx3); font-variant-numeric: tabular-nums; }
+  .lb-card.top1 .lb-rank { color: var(--champ); font-size: 16px; }
+  .lb-av { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 14px; }
+  .lb-info { flex: 1; }
+  .lb-name { font-weight: 700; font-size: 13.5px; }
+  .lb-sub { font-size: 10.5px; color: var(--tx3); }
+  .lb-pts { text-align: right; }
+  .lb-pts .n { font-weight: 800; font-size: 15px; font-variant-numeric: tabular-nums; }
+  .lb-pts .u { font-size: 8.5px; color: var(--tx3); letter-spacing: 1px; }
+  .delta-up { color: #15803D; font-size: 10px; font-weight: 700; }
+
+  /* ============ PLAYER PROFILE + RADAR (ใหม่) ============ */
+  .profCard { background: var(--paper); border: 1px solid var(--line); border-radius: 18px; padding: 20px; text-align: center; }
+  .profAv { width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 28px; }
+  .profName { font-weight: 800; font-size: 19px; }
+  .profSub { font-size: 12px; color: var(--tx3); margin-top: 2px; }
+  .profStats { display: flex; margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px; }
+  .profStat { flex: 1; }
+  .profStat .v { font-weight: 800; font-size: 18px; font-variant-numeric: tabular-nums; }
+  .profStat .v.org { color: var(--org); }
+  .profStat .l { font-size: 9px; color: var(--tx3); letter-spacing: 1px; margin-top: 2px; }
+  .radarCard { background: var(--paper); border: 1px solid var(--line); border-radius: 18px; padding: 16px; margin-top: 10px; }
+  .radarHead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .radarTitle { font-weight: 800; font-size: 14px; }
+  .radarCompare { font-size: 10px; color: var(--tx3); font-weight: 600; }
+  .radarCompare b { color: var(--org); }
+  .legend { display: flex; gap: 14px; margin-top: 8px; justify-content: center; font-size: 10.5px; color: var(--tx2); font-weight: 600; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+
+  /* ============ CLOCK snippet (ปลายแถว) ============ */
+  .clockMini {
+    background: #0D0D0F; border-radius: 18px; padding: 16px; color: #fff;
+    display: flex; align-items: center; gap: 14px; margin-top: 10px;
+  }
+  .clockDial {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: conic-gradient(var(--org) 0 62%, #2B2B31 62% 100%);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .clockDial > div { width: 50px; height: 50px; border-radius: 50%; background: #0D0D0F; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .clockInfo .lv { font-size: 9.5px; letter-spacing: 1.5px; color: var(--org); font-weight: 800; }
+  .clockInfo .bl { font-size: 19px; font-weight: 800; margin: 2px 0; font-variant-numeric: tabular-nums; }
+  .clockInfo .sb { font-size: 10.5px; color: rgba(255,255,255,0.55); }
+  .liveDot { width: 7px; height: 7px; border-radius: 50%; background: #D92D20; display: inline-block; margin-right: 5px; animation: blink 1.2s infinite; }
+  @keyframes blink { 50% { opacity: 0.25; } }
+
+  svg.ic { stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+</style>
+</head>
+<body>
+<div class="page-title">Poxera — Sports / Social Direction</div>
+<div class="page-sub">ต่อยอดฐานเดิม (White Premium × Strava) · เพิ่ม: gold champion language · score animations · stagger feed · Season + Radar (หน้าใหม่จากเว็บหลัก)</div>
+
+<div class="phones">
+  <!-- ═══ 1. FEED ═══ -->
+  <div class="phone-col">
+    <div class="phone-label">1 · Feed (Stagger + Champion)</div>
+    <div class="phone">
+      <div class="tabbar" style="border-top:none; border-bottom:1px solid var(--line); order:-1;">
+        <div class="tab active">
+          <svg class="ic" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 9v11h14V9"/></svg>Feed
+        </div>
+        <div class="tab"><svg class="ic"><circle cx="12" cy="12" r="9"/></svg>Clubs</div>
+        <div class="tab"><svg class="ic"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Play</div>
+        <div class="tab"><svg class="ic"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>History</div>
+        <div class="tab"><svg class="ic"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-5 8-5s6.5 1 8 5"/></svg>You</div>
+      </div>
+
+      <div class="content">
+        <div class="brandrow">
+          <span class="brand">POXERA</span><span class="brandsub">Feed</span>
+        </div>
+
+        <!-- post 1 -->
+        <div class="post">
+          <div class="phead">
+            <div class="avatar" style="background:var(--org)">น</div>
+            <div style="flex:1">
+              <div class="pname" style="display:flex;align-items:center;gap:6px">
+                <b style="font-size:14px">นน</b><span class="badge-champ">CHAMP</span>
+              </div>
+              <div class="pmeta">2 ชม. · PPCH Poker Club</div>
+            </div>
+          </div>
+          <div class="ptitle">คว้าอันดับ 1 ซีซัน 2 All in ด้วย 960 แต้ม</div>
+          <div class="pcap">จบอันดับ #1 จาก 9 คน — +100 แต้ม</div>
+          <div class="pstats">
+            <div class="pstat"><div class="l">Players</div><div class="v">9</div></div>
+            <div class="pstat"><div class="l">Total Pot</div><div class="v">฿3,000</div></div>
+            <div class="pstat"><div class="l">Time</div><div class="v">3h 34m</div></div>
+            <div class="pstat"><div class="l">Achievements</div><div class="v gold">🏆 2</div></div>
+          </div>
+          <div class="ach">
+            <svg class="ic" style="color:var(--champ);fill:var(--champ)"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H5a3 3 0 0 0 3 3"/></svg>
+            <span>นน ขึ้นอันดับ 1 ของ Season Leaderboard!</span>
+          </div>
+          <div class="photos">
+            <div class="photo" style="background:linear-gradient(135deg,#1D4ED8,#0E7490)">รูป 1/3</div>
+            <div class="photo" style="background:linear-gradient(135deg,#15803D,#0E7490)">รูป 2/3</div>
+          </div>
+          <div class="pcounts"><span>14 gave kudos</span><span>1 comments</span></div>
+          <div class="pactions">
+            <div class="pact kudos"><svg class="ic" style="fill:#FFF1EA"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.3a2 2 0 0 0 2-1.7l1.4-9a2 2 0 0 0-2-2.3H14zM7 9H4v12h3z"/></svg>Kudos</div>
+            <div class="pact"><svg class="ic"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Comment</div>
+            <div class="pact"><svg class="ic"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.7l6.8-4.4M8.6 13.3l6.8 4.4"/></svg>Share</div>
+          </div>
+        </div>
+
+        <!-- post 2 compact -->
+        <div class="post">
+          <div class="phead">
+            <div class="avatar" style="background:#1D4ED8">ฮ</div>
+            <div style="flex:1">
+              <b style="font-size:14px">ฮฮอล</b>
+              <div class="pmeta">5 ชม. · PPCH Poker Club</div>
+            </div>
+          </div>
+          <div class="ptitle" style="font-size:15px">Knockout 3 คนในรอบเดียว — วันเด็ดสุดของซีซัน</div>
+          <div class="pstats">
+            <div class="pstat"><div class="l">Players</div><div class="v">9</div></div>
+            <div class="pstat"><div class="l">Total Pot</div><div class="v">฿2,250</div></div>
+            <div class="pstat"><div class="l">Achievements</div><div class="v gold">🏆 1</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tabbar">
+        <div class="tab active"><svg class="ic"><path d="M3 11l9-8 9 8"/><path d="M5 9v11h14V9"/></svg>Feed</div>
+        <div class="tab"><svg class="ic"><circle cx="12" cy="12" r="9"/></svg>Clubs</div>
+        <div class="tab"><svg class="ic"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Play</div>
+        <div class="tab"><svg class="ic"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>History</div>
+        <div class="tab"><svg class="ic"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-5 8-5s6.5 1 8 5"/></svg>You</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. SEASON -->
+  <div class="phone-col">
+    <div class="phone-label">2 · Season Leaderboard (ใหม่ — จากเว็บหลัก)</div>
+    <div class="phone">
+      <div class="tabbar" style="border-top:none; border-bottom:1px solid var(--line); order:-1;">
+        <div class="tab"><svg class="ic"><path d="M3 11l9-8 9 8"/><path d="M5 9v11h14V9"/></svg>Feed</div>
+        <div class="tab"><svg class="ic"><circle cx="12" cy="12" r="9"/></svg>Clubs</div>
+        <div class="tab"><svg class="ic"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Play</div>
+        <div class="tab active"><svg class="ic"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>History</div>
+        <div class="tab"><svg class="ic"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-5 8-5s6.5 1 8 5"/></svg>You</div>
+      </div>
+
+      <div class="content">
+        <div class="brandrow"><span class="brand">POXERA</span><span class="brandsub">Season</span></div>
+
+        <div class="seasonHero">
+          <div class="seasonTag">SEASON 2 · ACTIVE</div>
+          <div style="font-size:20px;font-weight:800">All in</div>
+          <div class="seasonMeta">
+            <div><b>19</b>PLAYERS</div>
+            <div><b>14</b>ROUNDS</div>
+            <div><b>฿29,600</b>POT</div>
+          </div>
+        </div>
+
+        <div class="lb-card top1">
+          <div class="lb-rank">1</div>
+          <div class="lb-av" style="background:var(--org)">น</div>
+          <div class="lb-info">
+            <div class="lb-name">นน</div>
+            <div class="lb-sub">12 games · 34.5 ชม.</div>
+          </div>
+          <div class="lb-pts"><div class="n">960</div><div class="u">PTS ▲</div></div>
+        </div>
+
+        <div class="lb-card">
+          <div class="lb-rank">2</div>
+          <div class="lb-av" style="background:#1D4ED8">น</div>
+          <div class="lb-info">
+            <div class="lb-name">นาย</div>
+            <div class="lb-sub">11 games · 30 ชม.</div>
+          </div>
+          <div class="lb-pts"><div class="n">595</div><div class="u">PTS</div></div>
+        </div>
+
+        <div class="lb-card">
+          <div class="lb-rank">3</div>
+          <div class="lb-av" style="background:#15803D">ฮ</div>
+          <div class="lb-info">
+            <div class="lb-name">ฮฮอล</div>
+            <div class="lb-sub">10 games · 28 ชม.</div>
+          </div>
+          <div class="lb-pts"><div class="n">500</div><div class="u">PTS</div></div>
+        </div>
+
+        <div class="clockMini">
+          <div class="clockDial"><div>13:42</div></div>
+          <div>
+            <div class="lv">● LIVE · LEVEL 3</div>
+            <div class="bl">200 / 400</div>
+            <div class="sb">Next 300/600 · Ante 75</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tabbar">
+        <div class="tab"><svg class="ic"><path d="M3 11l9-8 9 8"/><path d="M5 9v11h14V9"/></svg>Feed</div>
+        <div class="tab"><svg class="ic"><circle cx="12" cy="12" r="9"/></svg>Clubs</div>
+        <div class="tab"><svg class="ic"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Play</div>
+        <div class="tab active"><svg class="ic"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>History</div>
+        <div class="tab"><svg class="ic"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-5 8-5s6.5 1 8 5"/></svg>You</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. PLAYER PROFILE + RADAR -->
+  <div class="phone-col">
+    <div class="phone-label">3 · You + Radar เทียบเพื่อน (ใหม่)</div>
+    <div class="phone">
+      <div class="tabbar" style="border-top:none; border-bottom:1px solid var(--line); order:-1;">
+        <div class="tab"><svg class="ic"><path d="M3 11l9-8 9 8"/><path d="M5 9v11h14V9"/></svg>Feed</div>
+        <div class="tab"><svg class="ic"><circle cx="12" cy="12" r="9"/></svg>Clubs</div>
+        <div class="tab"><svg class="ic"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Play</div>
+        <div class="tab"><svg class="ic"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>History</div>
+        <div class="tab active"><svg class="ic"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-5 8-5s6.5 1 8 5"/></svg>You</div>
+      </div>
+
+      <div class="content">
+        <div class="brandrow"><span class="brand">POXERA</span><span class="brandsub">You</span></div>
+
+        <div class="profCard">
+          <div class="profAv" style="background:var(--org)">น</div>
+          <div class="profName">นน</div>
+          <div class="profSub">12 sessions · 34.5 ชม.เล่น</div>
+          <div class="profStats">
+            <div class="profStat"><div class="v">12</div><div class="l">SESSIONS</div></div>
+            <div class="profStat"><div class="v org">4</div><div class="l">WINS</div></div>
+            <div class="profStat"><div class="v">+฿4,850</div><div class="l">NET</div></div>
+          </div>
+        </div>
+
+        <div class="radarCard">
+          <div class="radarHead">
+            <span class="radarTitle">Skill Radar</span>
+            <span class="radarCompare">เทียบกับ <b>นาย</b></span>
+          </div>
+          <svg viewBox="0 0 240 210" width="100%" style="display:block;margin:0 auto">
+            <!-- grid rings -->
+            <polygon points="120,25 205,72 205,168 120,195 35,168 35,72" fill="none" stroke="#E8E7E2" stroke-width="1"/>
+            <polygon points="120,50 183,84 183,156 120,175 57,156 57,84" fill="none" stroke="#E8E7E2" stroke-width="1"/>
+            <polygon points="120,75 161,96 161,144 120,156 79,144 79,84" fill="none" stroke="#E8E7E2" stroke-width="1"/>
+            <!-- axes -->
+            <line x1="120" y1="110" x2="120" y2="25" stroke="#E8E7E2"/>
+            <line x1="120" y1="110" x2="205" y2="72" stroke="#E8E7E2"/>
+            <line x1="120" y1="110" x2="205" y2="168" stroke="#E8E7E2"/>
+            <line x1="120" y1="110" x2="120" y2="195" stroke="#E8E7E2"/>
+            <line x1="120" y1="110" x2="35" y2="168" stroke="#E8E7E2"/>
+            <line x1="120" y1="110" x2="35" y2="72" stroke="#E8E7E2"/>
+            <!-- compare (นาย) muted -->
+            <polygon points="120,48 188,86 183,150 120,172 62,150 66,86"
+                     fill="rgba(95,95,102,0.10)" stroke="#B3B3BA" stroke-width="1.5" stroke-dasharray="4 3"/>
+            <!-- player (นน) accent -->
+            <polygon points="120,35 195,78 195,162 120,188 48,158 55,80"
+                     fill="rgba(252,82,0,0.16)" stroke="#FC5200" stroke-width="2.2"/>
+            <circle cx="120" cy="35" r="3.5" fill="#FC5200"/>
+            <circle cx="195" cy="78" r="3.5" fill="#FC5200"/>
+            <circle cx="195" cy="162" r="3.5" fill="#FC5200"/>
+            <circle cx="120" cy="188" r="3.5" fill="#FC5200"/>
+            <circle cx="48" cy="158" r="3.5" fill="#FC5200"/>
+            <circle cx="55" cy="80" r="3.5" fill="#FC5200"/>
+            <!-- labels -->
+            <text x="120" y="16" text-anchor="middle" font-size="9" fill="#5F5F66" font-weight="600">Survival</text>
+            <text x="215" y="66" text-anchor="end" font-size="9" fill="#5F5F66" font-weight="600" transform="translate(6,0)">Efficiency</text>
+            <text x="215" y="176" text-anchor="end" font-size="9" fill="#5F5F66" font-weight="600" transform="translate(6,0)">Aggression</text>
+            <text x="120" y="207" text-anchor="middle" font-size="9" fill="#5F5F66" font-weight="600">Pot Dom.</text>
+            <text x="25" y="176" font-size="9" fill="#5F5F66" font-weight="600">Consist.</text>
+            <text x="25" y="66" font-size="9" fill="#5F5F66" font-weight="600">Discipline</text>
+          </svg>
+          <div class="legend">
+            <span><span class="dot" style="background:var(--org)"></span>นน</span>
+            <span><span class="dot" style="background:#B3B3BA"></span>นาย</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tabbar">
+        <div class="tab"><svg class="ic"><path d="M3 11l9-8 9 8"/><path d="M5 9v11h14V9"/></svg>Feed</div>
+        <div class="tab"><svg class="ic"><circle cx="12" cy="12" r="9"/></svg>Clubs</div>
+        <div class="tab"><svg class="ic"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Play</div>
+        <div class="tab"><svg class="ic"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>History</div>
+        <div class="tab active"><svg class="ic"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-5 8-5s6.5 1 8 5"/></svg>You</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
