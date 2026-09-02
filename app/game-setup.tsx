@@ -104,7 +104,7 @@ export default function GameSetupScreen() {
       startSb: num(sb, 25),
       startBb: num(bb, 50),
     });
-    router.back();
+    router.canDismiss() ? router.back() : router.replace("/play");
   };
 
   const modeDesc = BLIND_MODES.find((m) => m.key === setup.blindMode)?.desc ?? "";
@@ -113,7 +113,7 @@ export default function GameSetupScreen() {
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.header}>
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => (router.canDismiss() ? router.back() : router.replace("/play"))}
           style={styles.backBtn}
           accessibilityRole="button"
           accessibilityLabel="ย้อนกลับ"
