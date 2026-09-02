@@ -8,8 +8,9 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ThumbsUp, MessageCircle, UserPlus, Clock } from "lucide-react-native";
+import { ThumbsUp, MessageCircle, Clock } from "lucide-react-native";
 import { C, R, S } from "@/theme/tokens";
 import { f } from "@/theme/typography";
 import { usePoxera, type FeedPost } from "@/features/poxera-store";
@@ -43,7 +44,13 @@ function PostCard({ post }: { post: FeedPost }) {
   return (
     <View style={styles.card}>
       <View style={styles.head}>
-        <Avatar name={post.playerName} color={post.playerColor} />
+        <Pressable
+          onPress={() => router.push(`/player/${post.playerId}`)}
+          accessibilityRole="button"
+          accessibilityLabel={`ดูโปรไฟล์ ${post.playerName}`}
+        >
+          <Avatar name={post.playerName} color={post.playerColor} />
+        </Pressable>
         <View style={{ flex: 1, marginLeft: S.md }}>
           <Text style={styles.name}>{post.playerName}</Text>
           <View style={styles.metaRow}>
@@ -152,25 +159,11 @@ function PostCard({ post }: { post: FeedPost }) {
 
 export default function FeedScreen() {
   const feed = usePoxera((s) => s.feed);
-  const suggested = useMemo(() => ["เม", "แจ็ค", "ปอนด์"], []);
-
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.header}>
         <Text style={styles.logo}>POXERA</Text>
         <Text style={styles.subtitle}>Feed</Text>
-      </View>
-
-      <View style={styles.suggestWrap}>
-        <Text style={styles.suggestTitle}>แนะนำเพื่อน</Text>
-        <View style={styles.suggestRow}>
-          {suggested.map((n) => (
-            <View key={n} style={styles.suggestChip}>
-              <UserPlus size={13} color={C.tx2} strokeWidth={2} />
-              <Text style={styles.suggestText}>{n}</Text>
-            </View>
-          ))}
-        </View>
       </View>
 
       <FlatList
@@ -198,21 +191,6 @@ const styles = StyleSheet.create({
   },
   logo: { ...f("extrabold"), fontSize: 20, letterSpacing: 2, color: C.ink },
   subtitle: { ...f("semibold"), fontSize: 13, color: C.tx3 },
-  suggestWrap: { paddingHorizontal: S.md, marginBottom: S.md },
-  suggestTitle: { ...f("semibold"), fontSize: 12, color: C.tx3, marginBottom: S.sm },
-  suggestRow: { flexDirection: "row", gap: S.sm },
-  suggestChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: C.paper,
-    borderColor: C.line,
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: S.md,
-    paddingVertical: 7,
-  },
-  suggestText: { ...f("medium"), fontSize: 12, color: C.tx2 },
   card: {
     backgroundColor: C.paper,
     borderRadius: R.lg,

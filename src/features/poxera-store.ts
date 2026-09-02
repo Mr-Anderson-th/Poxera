@@ -17,12 +17,15 @@ export type Club = {
   amenities: ClubAmenity[];
   color: string;
   isMember: boolean;
+  isOwner: boolean;
+  joinCode: string;
   joinPending: boolean;
   liked: boolean;
 };
 
 export type FeedPost = {
   id: string;
+  playerId: string;
   playerName: string;
   playerColor: string;
   clubName: string;
@@ -42,6 +45,7 @@ type PoxeraState = {
   userName: string;
   email: string;
   privacyPublic: boolean;
+  players: { id: string; name: string; color: string; games: number; privacyPublic: boolean }[];
   clubs: Club[];
   feed: FeedPost[];
   login: (email: string, name?: string) => void;
@@ -52,6 +56,11 @@ type PoxeraState = {
   toggleKudos: (postId: string) => void;
   addComment: (postId: string, text: string) => void;
   logout: () => void;
+  createClub: (name: string, description: string, minBuyIn: number) => void;
+  joinByCode: (code: string) => { ok: boolean; message: string };
+  updateClub: (clubId: string, patch: Partial<Pick<Club, "name" | "description" | "minBuyIn" | "openHour" | "amenities">>) => void;
+  addMember: (clubId: string) => void;
+  removeMember: (clubId: string) => void;
 };
 
 const seedClubs: Club[] = [
@@ -68,6 +77,8 @@ const seedClubs: Club[] = [
     amenities: ["มีที่จอดรถ", "Wi-Fi", "ขนม+เครื่องดื่ม", "โซนแอร์"],
     color: "#FC5200",
     isMember: true,
+    isOwner: true,
+    joinCode: "PPCH24",
     joinPending: false,
     liked: true,
   },
@@ -84,6 +95,8 @@ const seedClubs: Club[] = [
     amenities: ["มีที่จอดรถ", "อาหาร", "มุมสูบบุหรี่"],
     color: "#1D4ED8",
     isMember: false,
+    isOwner: false,
+    joinCode: "RVK751",
     joinPending: false,
     liked: false,
   },
@@ -100,6 +113,8 @@ const seedClubs: Club[] = [
     amenities: ["Wi-Fi", "กาแฟ", "โซนเงียบ"],
     color: "#15803D",
     isMember: false,
+    isOwner: false,
+    joinCode: "ACE310",
     joinPending: false,
     liked: false,
   },
@@ -116,6 +131,8 @@ const seedClubs: Club[] = [
     amenities: ["มีที่จอดรถ", "ห้อง VIP", "กล้องวงจรปิด", "พนักงานรักษาความปลอดภัย"],
     color: "#B8912F",
     isMember: false,
+    isOwner: false,
+    joinCode: "BBS888",
     joinPending: true,
     liked: false,
   },
@@ -124,6 +141,7 @@ const seedClubs: Club[] = [
 const seedFeed: FeedPost[] = [
   {
     id: "f1",
+    playerId: "p1",
     playerName: "นน",
     playerColor: "#FC5200",
     clubName: "PPCH Poker Club",
@@ -138,6 +156,7 @@ const seedFeed: FeedPost[] = [
   },
   {
     id: "f2",
+    playerId: "p2",
     playerName: "ฮฮอล",
     playerColor: "#1D4ED8",
     clubName: "PPCH Poker Club",
@@ -152,6 +171,7 @@ const seedFeed: FeedPost[] = [
   },
   {
     id: "f3",
+    playerId: "p3",
     playerName: "บอส",
     playerColor: "#15803D",
     clubName: "River Kings",
@@ -172,6 +192,11 @@ export const usePoxera = create<PoxeraState>((set) => ({
   userName: "",
   email: "",
   privacyPublic: true,
+  players: [
+    { id: "p1", name: "นน", color: "#FC5200", games: 12, privacyPublic: true },
+    { id: "p2", name: "ฮฮอล", color: "#1D4ED8", games: 10, privacyPublic: false },
+    { id: "p3", name: "บอส", color: "#15803D", games: 8, privacyPublic: true },
+  ],
   clubs: seedClubs,
   feed: seedFeed,
   login: (email, name) =>
@@ -207,4 +232,55 @@ export const usePoxera = create<PoxeraState>((set) => ({
       ),
     })),
   logout: () => set({ loggedIn: false, onboarded: false, userName: "", email: "" }),
+  createClub: (name, description, minBuyIn) =>
+    set((s) => {
+      const code = Math.random().toString(36).slice(2, 8).toUpperCase();
+      const colors = ["#FC5200", "#1D4ED8", "#15803D", "#B8912F"];
+      const club: Club = {
+        id: "own" + Date.now().toString(36),
+        name,
+        description: description || "คลับของฉัน",
+        rating: 5,
+        ratingCount: 1,
+        openHour: "19:00 - 02:00",
+        minBuyIn,
+        memberCount: 1,
+        distanceKm: 0,
+        amenities: ["ของเราเอง"],
+        color: colors[s.clubs.length % colors.length],
+        isMember: true,
+        isOwner: true,
+        joinCode: code,
+        joinPending: false,
+        liked: true,
+      };
+      return { clubs: [club, ...s.clubs] };
+    }),
+  joinByCode: (code) => {
+    const club = usePoxera.getState().clubs.find((c) => c.joinCode === code.toUpperCase());
+    if (!club) return { ok: false, message: "ไม่พบรหัสคลับนี้" };
+    if (club.isMember) return { ok: false, message: "คุณเป็นสมาชิกคลับนี้อยู่แล้ว" };
+    set((s) => ({
+      clubs: s.clubs.map((c) =>
+        c.id === club.id ? { ...c, joinPending: true, liked: true } : c,
+      ),
+    }));
+    return { ok: true, message: "ส่งคำขอแล้ว — รอเจ้าของคลับอนุมัติ" };
+  },
+  updateClub: (clubId, patch) =>
+    set((s) => ({
+      clubs: s.clubs.map((c) => (c.id === clubId ? { ...c, ...patch } : c)),
+    })),
+  addMember: (clubId) =>
+    set((s) => ({
+      clubs: s.clubs.map((c) =>
+        c.id === clubId ? { ...c, memberCount: c.memberCount + 1 } : c,
+      ),
+    })),
+  removeMember: (clubId) =>
+    set((s) => ({
+      clubs: s.clubs.map((c: Club) =>
+        c.id === clubId && c.memberCount > 1 ? { ...c, memberCount: c.memberCount - 1 } : c,
+      ),
+    })),
 }));

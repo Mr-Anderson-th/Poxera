@@ -34,6 +34,8 @@ export default function RootLayout() {
         <Stack.Screen name="auth" options={{ animation: "fade" }} />
         <Stack.Screen name="onboarding" options={{ animation: "fade" }} />
         <Stack.Screen name="club/[id]" />
+        <Stack.Screen name="player/[id]" />
+        <Stack.Screen name="club-manage/[id]" />
         <Stack.Screen name="clock" options={{ animation: "fade" }} />
         <Stack.Screen name="game-summary" />
         <Stack.Screen name="players/[id]" />

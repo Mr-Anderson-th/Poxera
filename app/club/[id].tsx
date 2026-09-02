@@ -15,6 +15,7 @@ import {
   Wallet,
   Check,
   Hourglass,
+  Settings,
 } from "lucide-react-native";
 import { C, R, S } from "@/theme/tokens";
 import { f } from "@/theme/typography";
@@ -49,6 +50,16 @@ export default function ClubDetailScreen() {
               <ChevronLeft size={20} color={C.white} strokeWidth={2.5} />
             </Pressable>
             <View style={{ flexDirection: "row", gap: S.sm }}>
+              {club.isOwner ? (
+                <Pressable
+                  onPress={() => router.push(`/club-manage/${club.id}`)}
+                  style={({ pressed }) => [styles.circleBtn, pressed && { opacity: 0.8 }]}
+                  accessibilityRole="button"
+                  accessibilityLabel="จัดการคลับ"
+                >
+                  <Settings size={17} color={C.white} strokeWidth={2} />
+                </Pressable>
+              ) : null}
               <Pressable
                 style={({ pressed }) => [styles.circleBtn, pressed && { opacity: 0.8 }]}
                 accessibilityRole="button"
