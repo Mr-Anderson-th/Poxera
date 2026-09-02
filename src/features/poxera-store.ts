@@ -37,6 +37,10 @@ export type FeedPost = {
   kudos: number;
   comments: { name: string; text: string }[];
   kudosGiven: boolean;
+  durationMins: number;
+  achievements: number;
+  achievementText: string;
+  photos: string[];
 };
 
 type PoxeraState = {
@@ -150,6 +154,10 @@ const seedFeed: FeedPost[] = [
     points: 100,
     position: 1,
     entries: 9,
+    durationMins: 214,
+    achievements: 2,
+    achievementText: "นน ขึ้นอันดับ 1 ของ Season Leaderboard!",
+    photos: ["#1D4ED8", "#15803D", "#B8912F"],
     kudos: 14,
     comments: [{ name: "นาย", text: "เล่นวันศุกร์หน้าอีกนะ ขอแชมืดคืน" }],
     kudosGiven: false,
@@ -165,6 +173,10 @@ const seedFeed: FeedPost[] = [
     points: 75,
     position: 2,
     entries: 9,
+    durationMins: 186,
+    achievements: 1,
+    achievementText: "ฮฮอล ทำ Most Knockouts ในคลับ",
+    photos: ["#DC2626", "#7C3AED"],
     kudos: 9,
     comments: [],
     kudosGiven: true,
@@ -180,6 +192,10 @@ const seedFeed: FeedPost[] = [
     points: 60,
     position: 3,
     entries: 12,
+    durationMins: 240,
+    achievements: 0,
+    achievementText: "",
+    photos: ["#0E7490"],
     kudos: 21,
     comments: [{ name: "นน", text: "สุดยอด! ครั้งหน้าเจอกันนะ" }],
     kudosGiven: false,
