@@ -111,7 +111,7 @@ export default function ClockScreen() {
 
           <View style={styles.sideCircle}>
             <Text style={styles.sideLabel}>NEXT BLINDS</Text>
-            <Text style={styles.sideValue}>{`${nextBlind.sb}/${nextBlind.bb}`}</Text>
+            <Text style={styles.sideValue}>{nextBlind ? `${nextBlind.sb}/${nextBlind.bb}` : "—"}</Text>
             <Text style={styles.sideAnte}>{nextBlind?.ante ? `Ante: ${nextBlind.ante}` : "Ante: –"}</Text>
           </View>
         </View>

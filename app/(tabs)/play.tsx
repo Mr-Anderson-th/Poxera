@@ -1,5 +1,6 @@
 // Poxera Play — setup เกมใหม่: เลือกคลับ → เลือกผู้เล่น (เพื่อน/QR) → เริ่ม clock
 import { useState } from "react";
+import { useMemo } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -11,7 +12,8 @@ import { usePoxera } from "@/features/poxera-store";
 const FRIENDS = ["นน", "นาย", "ฮฮอล", "บอส", "เม", "แจ็ค", "ปอนด์", "กอล์ฟ"];
 
 export default function PlayScreen() {
-  const clubs = usePoxera((s) => s.clubs.filter((c) => c.isMember));
+  const allClubs = usePoxera((s) => s.clubs);
+  const clubs = useMemo(() => allClubs.filter((c) => c.isMember), [allClubs]);
   const [clubId, setClubId] = useState<string | null>(null);
   const [picked, setPicked] = useState<string[]>([]);
 
