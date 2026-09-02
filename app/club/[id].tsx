@@ -41,7 +41,7 @@ export default function ClubDetailScreen() {
         <View style={[styles.hero, { backgroundColor: club.color }]}>
           <View style={styles.heroTop}>
             <Pressable
-              onPress={() => router.back()}
+              onPress={() => (router.canDismiss() ? router.back() : router.replace("/clubs"))}
               style={({ pressed }) => [styles.circleBtn, pressed && { opacity: 0.8 }]}
               accessibilityRole="button"
               accessibilityLabel="ย้อนกลับ"

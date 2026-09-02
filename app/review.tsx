@@ -16,7 +16,7 @@ export default function ReviewScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
-        <ChevronLeft size={22} color={C.ink} strokeWidth={2} onPress={() => router.back()} />
+        <ChevronLeft size={22} color={C.ink} strokeWidth={2} onPress={() => (router.canDismiss() ? router.back() : router.replace("/play"))} />
         <Text style={styles.logo}>REVIEW QUEUE</Text>
         <Text style={styles.badge}>{pending.length} PENDING</Text>
       </View>

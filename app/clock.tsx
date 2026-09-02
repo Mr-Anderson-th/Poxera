@@ -84,7 +84,7 @@ export default function ClockScreen() {
     <View style={styles.root}>
       <SafeAreaView style={styles.safe}>
         <View style={styles.topRow}>
-          <Pressable accessibilityLabel="Exit clock" onPress={() => router.back()} style={styles.exitBtn}>
+          <Pressable accessibilityLabel="Exit clock" onPress={() => (router.canDismiss() ? router.back() : router.replace("/play"))} style={styles.exitBtn}>
             <ChevronLeft size={16} color="#8A8A92" strokeWidth={2} />
             <Text style={styles.exitText}>Exit</Text>
           </Pressable>

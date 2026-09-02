@@ -93,7 +93,7 @@ export default function GameSummaryScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
-        <Pressable accessibilityLabel="Back" onPress={() => router.back()}>
+        <Pressable accessibilityLabel="Back" onPress={() => (router.canDismiss() ? router.back() : router.replace("/play"))}>
           <Text style={styles.backText}>‹ CLOCK</Text>
         </Pressable>
         <Text style={styles.logo}>GAME SUMMARY</Text>
