@@ -97,7 +97,7 @@ export default function ReviewScreen() {
         ) : null}
 
         <Text style={styles.noteLocal}>
-          ⚠ Local review — การ approve ณ ที่นี้ยังไม่เขียน Supabase / ไม่คำนวณ MMR (รอ migration + algorithm)
+          ⚠ Local review — การอนุมัติควรเป็นเจ้าของคลับ (owner) เท่านั้น · ยังไม่เขียน Supabase / ไม่คำนวณ MMR (รอ migration + algorithm)
         </Text>
       </ScrollView>
     </SafeAreaView>

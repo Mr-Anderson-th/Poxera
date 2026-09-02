@@ -3,10 +3,11 @@ import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { QrCode, Check, ChevronDown, Search, X, UserPlus } from "lucide-react-native";
+import { QrCode, Check, ChevronDown, Search, X, UserPlus, Settings2, ChevronRight } from "lucide-react-native";
 import { C, S, R } from "@/theme/tokens";
 import { f } from "@/theme/typography";
 import { usePoxera } from "@/features/poxera-store";
+import { useGameSetup } from "@/features/game-setup-store";
 
 const ALL_FRIENDS = ["นน", "นาย", "ฮฮอล", "บอส", "เม", "แจ็ค", "ปอนด์", "กอล์ฟ", "เจมส์", "แพร"];
 const RECENT = ["นน", "นาย", "ฮฮอล", "บอส", "เม"];
@@ -43,13 +44,15 @@ function AvatarChip({
 export default function PlayScreen() {
   const allClubs = usePoxera((s) => s.clubs);
   const myClubs = useMemo(() => allClubs.filter((c) => c.isMember), [allClubs]);
-  const [clubId, setClubId] = useState<string | null>(null);
+  const setSetup = useGameSetup((s) => s.setSetup);
+  const [clubId, setClubId] = useState<string | null | "none">(null);
   const [dropOpen, setDropOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false); // ปุ่ม "เพิ่ม" เปิดช่องค้นหา
   const [picked, setPicked] = useState<string[]>([]);
   const [query, setQuery] = useState("");
 
-  const selectedClub = allClubs.find((c) => c.id === clubId);
-  const searching = query.trim().length > 0;
+  const selectedClub = clubId && clubId !== "none" ? allClubs.find((c) => c.id === clubId) : null;
+  const searching = searchOpen || query.trim().length > 0;
   const searchResults = ALL_FRIENDS.filter(
     (n) => n.includes(query.trim()) && !picked.includes(n),
   );
@@ -57,7 +60,14 @@ export default function PlayScreen() {
   const toggle = (n: string) =>
     setPicked((p) => (p.includes(n) ? p.filter((x) => x !== n) : [...p, n]));
 
-  const start = () => router.push("/clock");
+  const start = () => {
+    setSetup({
+      clubId: clubId && clubId !== "none" ? clubId : null,
+      clubName: selectedClub?.name ?? null,
+      playerNames: picked.map((n, i) => ({ id: `local-${i}`, name: n })),
+    });
+    router.push("/clock");
+  };
 
   return (
     <SafeAreaView style={styles.screen} edges={["top"]}>
@@ -88,8 +98,23 @@ export default function PlayScreen() {
         </Pressable>
         {dropOpen ? (
           <View style={styles.dropList}>
+            {/* ตัวเลือก ไม่มีคลับ */}
+            <Pressable
+              onPress={() => { setClubId("none"); setDropOpen(false); }}
+              style={({ pressed }) => [
+                styles.dropItem, clubId === "none" && styles.dropItemActive, pressed && { opacity: 0.8 },
+              ]}
+              accessibilityRole="menuitem"
+              accessibilityLabel="ไม่มีคลับ — เล่นส่วนตัว"
+            >
+              <View style={[styles.dropDot, styles.dropDotNone]} />
+              <Text style={[styles.dropItemText, clubId === "none" && { color: C.org }]}>
+                ไม่มีคลับ (เล่นส่วนตัว)
+              </Text>
+              {clubId === "none" ? <Check size={15} color={C.org} strokeWidth={3} /> : null}
+            </Pressable>
             {myClubs.length === 0 ? (
-              <Text style={styles.dropEmpty}>ยังไม่มีคลับ — สมัครจากแท็บ Clubs</Text>
+              <Text style={styles.dropEmpty}>คุณยังไม่ได้เป็นสมาชิกคลับ — สมัครจากแท็บ Clubs</Text>
             ) : (
               myClubs.map((c) => (
                 <Pressable
@@ -122,9 +147,9 @@ export default function PlayScreen() {
           {RECENT.map((n) => (
             <AvatarChip key={n} name={n} selected={picked.includes(n)} onPress={() => toggle(n)} />
           ))}
-          {/* add-friend trigger scrolls to search */}
+          {/* add-friend opens search box */}
           <Pressable
-            onPress={() => setQuery(" ")}
+            onPress={() => setSearchOpen(true)}
             style={({ pressed }) => [styles.avItem, pressed && { opacity: 0.8 }]}
             accessibilityRole="button"
             accessibilityLabel="ค้นหาผู้เล่นเพิ่ม"
@@ -187,6 +212,21 @@ export default function PlayScreen() {
             </Text>
           </View>
         ) : null}
+
+        {/* 3 · Set ตั้งค่าการเล่น (เหมือนเว็บหลัก) */}
+        <Pressable
+          onPress={() => router.push("/game-setup")}
+          style={({ pressed }) => [styles.setupBtn, pressed && { opacity: 0.85 }]}
+          accessibilityRole="button"
+          accessibilityLabel="ตั้งค่าการเล่น — buy-in, blind, เวลา, payout"
+        >
+          <Settings2 size={16} color={C.ink} strokeWidth={2.2} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.setupTitle}>SET — ตั้งค่าการเล่น</Text>
+            <Text style={styles.setupSub}>buy-in · blind levels · เวลาต่อรอบ · payout</Text>
+          </View>
+          <ChevronRight size={16} color={C.tx3} strokeWidth={2.5} />
+        </Pressable>
 
         <Pressable
           style={({ pressed }) => [styles.qrBtn, pressed && { opacity: 0.85 }]}
@@ -279,6 +319,22 @@ const styles = StyleSheet.create({
   dropItemActive: { backgroundColor: C.orgSoft },
   dropItemText: { ...f("semibold"), fontSize: 13.5, color: C.tx2, flex: 1 },
   dropDot: { width: 10, height: 10, borderRadius: 5 },
+  dropDotNone: { backgroundColor: C.line2 },
+  setupBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: C.paper,
+    borderWidth: 1,
+    borderColor: C.line,
+    borderRadius: R.md,
+    paddingHorizontal: S.md,
+    paddingVertical: 12,
+    marginTop: S.lg,
+    minHeight: 56,
+  },
+  setupTitle: { ...f("bold"), fontSize: 13.5, color: C.ink },
+  setupSub: { ...f("regular"), fontSize: 11.5, color: C.tx3, marginTop: 2 },
   dropEmpty: { ...f("medium"), fontSize: 12.5, color: C.tx3, padding: S.md },
   avRow: { gap: S.lg, paddingRight: S.lg, paddingVertical: 4 },
   avItem: { alignItems: "center", width: 64 },

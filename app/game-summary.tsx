@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -5,7 +6,8 @@ import { C, S, R } from "@/theme/tokens";
 import { f } from "@/theme/typography";
 import { useClockStore } from "@/features/clock/clock-store";
 import { useSubmissionStore } from "@/features/submission/submission-store";
-import { distributePot, PAYOUT_PRESETS } from "@/lib/poker";
+import { useGameSetup } from "@/features/game-setup-store";
+import { distributePot } from "@/lib/poker";
 import { Share2 } from "lucide-react-native";
 
 const money = (n: number) => `฿${Math.round(n).toLocaleString()}`;
@@ -15,6 +17,8 @@ const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "
 export default function GameSummaryScreen() {
   const clock = useClockStore();
   const submit = useSubmissionStore((s) => s.submit);
+  const setup = useGameSetup();
+  const [showTransfers, setShowTransfers] = useState(false); // ซ่อนไว้ กดค่อยแสดง
 
   if (clock.blinds.length === 0) {
     return (
@@ -31,7 +35,11 @@ export default function GameSummaryScreen() {
   const ordered = [...clock.activePlayers(), ...outs];
 
   const pot = clock.pot();
-  const structure = PAYOUT_PRESETS["50 / 30 / 20"].slice(0, Math.min(3, Math.max(1, Math.ceil(ordered.length / 3))));
+  // payout จากที่ user ตั้งใน SET (โครงสร้างเดียวกับเว็บหลัก) — ตัดให้พอดีจำนวนคนจ่าย
+  const structure = setup.payoutStructure.slice(
+    0,
+    Math.min(setup.payoutStructure.length, Math.max(1, Math.ceil(ordered.length / 3))),
+  );
   const payouts = distributePot(pot, structure);
 
   const rows = ordered.map((p, i) => {
@@ -75,6 +83,8 @@ export default function GameSummaryScreen() {
       roundName: `Live Game — ${new Date().toLocaleDateString("th-TH")}`,
       playedAt: new Date().toISOString(),
       submittedBy: "host",
+      clubId: setup.clubId,
+      clubName: setup.clubName,
       buyIn: clock.buyIn,
       rebuyAmount: clock.rebuyAmount,
       pot,
@@ -87,7 +97,8 @@ export default function GameSummaryScreen() {
         label: `${e.type === "rebuy" ? "re-buy" : "KO"} L${e.level} @ ${Math.floor(e.atSeconds / 60)}:${String(e.atSeconds % 60).padStart(2, "0")}`,
       })),
     });
-    router.replace("/review");
+    useGameSetup.getState().reset();
+    router.replace("/"); // กลับหน้าหลัก (Feed) — review อยู่ที่เจ้าของคลับ
   };
 
   return (
@@ -115,7 +126,10 @@ export default function GameSummaryScreen() {
           </View>
         </View>
 
-        <Text style={styles.section}>FINAL STANDINGS · PAYOUT 50/30/20</Text>
+        <Text style={styles.section}>
+          FINAL STANDINGS · {setup.payoutStructureName}
+          {setup.clubName ? ` · ${setup.clubName}` : ""}
+        </Text>
         <View style={styles.listCard}>
           {rows.map((r) => (
             <View key={r.playerId} style={styles.row}>
@@ -141,26 +155,39 @@ export default function GameSummaryScreen() {
           ✓ END &amp; SUBMIT FOR APPROVAL
         </Text>
 
-        {/* Transfer summary — ใครโอนให้ใคร (net-based settling) */}
+        {/* Transfer summary — ซ่อนไว้ กดปุ่มค่อยแสดง */}
         {transfers.length > 0 ? (
           <View style={styles.transferCard}>
-            <Text style={styles.transferTitle}>สรุปการโอนเงิน</Text>
-            {transfers.map((t, i) => (
-              <View key={i} style={styles.transferRow}>
-                <Text style={styles.transferFrom}>{t.from}</Text>
-                <Text style={styles.transferArrow}>→ โอน {money(t.amount)} →</Text>
-                <Text style={styles.transferTo}>{t.to}</Text>
-              </View>
-            ))}
             <Pressable
-              onPress={shareTransfers}
-              style={({ pressed }) => [styles.shareBtn, pressed && { opacity: 0.85 }]}
+              onPress={() => setShowTransfers(!showTransfers)}
+              style={({ pressed }) => [styles.transferToggle, pressed && { opacity: 0.8 }]}
               accessibilityRole="button"
-              accessibilityLabel="แชร์สรุปการโอนเงิน"
+              accessibilityLabel="แสดงหรือซ่อนสรุปการโอนเงิน"
+              accessibilityState={{ expanded: showTransfers }}
             >
-              <Share2 size={15} color={C.white} strokeWidth={2.5} />
-              <Text style={styles.shareText}>แชร์สรุปการโอน</Text>
+              <Text style={styles.transferTitle}>สรุปการโอนเงิน ({transfers.length} รายการ)</Text>
+              <Text style={styles.transferChevron}>{showTransfers ? "▾" : "▸"}</Text>
             </Pressable>
+            {showTransfers ? (
+              <>
+                {transfers.map((t, i) => (
+                  <View key={i} style={styles.transferRow}>
+                    <Text style={styles.transferFrom}>{t.from}</Text>
+                    <Text style={styles.transferArrow}>→ โอน {money(t.amount)} →</Text>
+                    <Text style={styles.transferTo}>{t.to}</Text>
+                  </View>
+                ))}
+                <Pressable
+                  onPress={shareTransfers}
+                  style={({ pressed }) => [styles.shareBtn, pressed && { opacity: 0.85 }]}
+                  accessibilityRole="button"
+                  accessibilityLabel="แชร์สรุปการโอนเงิน"
+                >
+                  <Share2 size={15} color={C.white} strokeWidth={2.5} />
+                  <Text style={styles.shareText}>แชร์สรุปการโอน</Text>
+                </Pressable>
+              </>
+            ) : null}
           </View>
         ) : null}
 
@@ -197,7 +224,14 @@ const styles = StyleSheet.create({
     padding: S.lg,
     marginTop: S.lg,
   },
-  transferTitle: { ...f("extrabold"), fontSize: 14, color: C.ink, marginBottom: S.sm },
+  transferToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    minHeight: 44,
+  },
+  transferChevron: { ...f("extrabold"), fontSize: 14, color: C.tx3 },
+  transferTitle: { ...f("bold"), fontSize: 14, color: C.ink },
   transferRow: {
     flexDirection: "row",
     alignItems: "center",

@@ -7,7 +7,8 @@ import { router } from "expo-router";
 import { C, R, S } from "@/theme/tokens";
 import { f } from "@/theme/typography";
 import { formatClock, useClockStore } from "@/features/clock/clock-store";
-import { usePlayers, useSettings } from "@/lib/queries";
+import { useGameSetup } from "@/features/game-setup-store";
+import { buildBlindLevels } from "@/lib/poker";
 
 const money = (n: number) => `฿${Math.round(n).toLocaleString()}`;
 
@@ -48,8 +49,7 @@ function Dial({ fraction }: { fraction: number }) {
 }
 
 export default function ClockScreen() {
-  const { data: players = [] } = usePlayers();
-  const { data: settings } = useSettings();
+  const setup = useGameSetup();
   const store = useClockStore();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [koPickerFor, setKoPickerFor] = useState<string | null>(null);
@@ -57,19 +57,19 @@ export default function ClockScreen() {
   const started = store.blinds.length > 0;
 
   useEffect(() => {
-    if (!started && players.length > 0) {
+    if (!started && setup.playerNames.length > 0) {
       store.start({
-        playerNames: players.filter((p) => p.active).map((p) => ({ id: p.id, name: p.name })),
-        buyIn: Number(settings?.default_buy_in ?? 500),
-        rebuyAmount: Number(settings?.default_rebuy ?? 500),
-        levelMinutes: settings?.default_level_minutes ?? 15,
-        startSb: settings?.default_starting_sb ?? 25,
-        startBb: settings?.default_starting_bb ?? 50,
-        multiplier: Number(settings?.default_blind_multiplier ?? 1.5),
+        playerNames: setup.playerNames,
+        buyIn: setup.buyIn,
+        rebuyAmount: setup.rebuyAmount,
+        levelMinutes: setup.levelMinutes,
+        startSb: setup.startSb,
+        startBb: setup.startBb,
+        multiplier: setup.multiplier,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [started, players.length]);
+  }, [started, setup.playerNames.length]);
 
   useEffect(() => {
     const t = setInterval(() => useClockStore.getState().tick(), 1000);

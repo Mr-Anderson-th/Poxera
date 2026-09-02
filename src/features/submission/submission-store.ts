@@ -5,6 +5,8 @@ export type Submission = {
   roundName: string;
   playedAt: string;
   submittedBy: string;
+  clubId: string | null;
+  clubName: string | null;
   buyIn: number;
   rebuyAmount: number;
   pot: number;
