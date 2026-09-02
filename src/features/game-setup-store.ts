@@ -15,6 +15,7 @@ export type GameSetup = {
   blindMode: "wsop" | "hyper" | "custom";
   payoutStructureName: string;
   payoutStructure: number[];
+  customPayout: string; // "60,30,10" — ผู้ใช้กรอกเอง
 };
 
 type SetupState = GameSetup & {
@@ -29,13 +30,14 @@ const DEFAULTS: GameSetup = {
   playerNames: [],
   buyIn: 500,
   rebuyAmount: 500,
-  levelMinutes: 15,
+  levelMinutes: 5,
   startSb: 25,
   startBb: 50,
   multiplier: 1.5,
   blindMode: "custom",
   payoutStructureName: "50 / 30 / 20",
   payoutStructure: PAYOUT_PRESETS["50 / 30 / 20"],
+  customPayout: "",
 };
 
 export const useGameSetup = create<SetupState>((set) => ({
