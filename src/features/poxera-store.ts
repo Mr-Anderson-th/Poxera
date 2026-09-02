@@ -45,7 +45,7 @@ type PoxeraState = {
   userName: string;
   email: string;
   privacyPublic: boolean;
-  players: { id: string; name: string; color: string; games: number; privacyPublic: boolean }[];
+  players: { id: string; name: string; color: string; games: number; hours: number; privacyPublic: boolean }[];
   clubs: Club[];
   feed: FeedPost[];
   login: (email: string, name?: string) => void;
@@ -193,9 +193,9 @@ export const usePoxera = create<PoxeraState>((set) => ({
   email: "",
   privacyPublic: true,
   players: [
-    { id: "p1", name: "นน", color: "#FC5200", games: 12, privacyPublic: true },
-    { id: "p2", name: "ฮฮอล", color: "#1D4ED8", games: 10, privacyPublic: false },
-    { id: "p3", name: "บอส", color: "#15803D", games: 8, privacyPublic: true },
+    { id: "p1", name: "นน", color: "#FC5200", games: 12, hours: 34.5, privacyPublic: true },
+    { id: "p2", name: "ฮฮอล", color: "#1D4ED8", games: 10, hours: 28.0, privacyPublic: false },
+    { id: "p3", name: "บอส", color: "#15803D", games: 8, hours: 19.5, privacyPublic: true },
   ],
   clubs: seedClubs,
   feed: seedFeed,

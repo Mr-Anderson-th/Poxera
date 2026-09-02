@@ -25,3 +25,9 @@
 **Verified:** tsc 0 error · vitest 17/17 · expo export web ✓
 
 **Run:** `cd D:\Code_SavvyApp\Poxera && npm start`
+
+
+## 2026-09-02 · Feedback round 2
+- club-manage ใหม่: รูปคลับบนสุด (placeholder) → รหัส+ข้อมูล → สมาชิกล่างสุด (กดเข้า /club-members/[id])
+- club-members list: ชื่อ · ชม.เล่น · GAMES → กดไป /player/[id] (โชว์ตาม privacy — EyeOff icon)
+- **NOTE (ยังไม่ทำ รอ user):** อัปโหลด/เปลี่ยนรูปคลับจริง — ต้องมี storage (Supabase Storage) ใส่ placeholder ไว้แล้ว
